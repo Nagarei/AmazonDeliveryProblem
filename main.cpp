@@ -34,7 +34,11 @@ int64_t tasks[N_MAX][2][2];
 
 int main()
 {
-	std::ifstream in("input.txt");
+	std::ifstream in("input1.txt");
+	if (!in) {
+		std::cerr << "NO INPUT" << std::endl;
+		return 0;
+	}
 	in >> start[0] >> start[1];
 	in >> N;
 	for (int32_t i = 0; i < N; i++)
@@ -47,6 +51,8 @@ int main()
 	
 	auto result = solver_beamsearch();
 
+	std::cout << "COMPLETE" << std::endl;
+	std::cout << result.size() << std::endl;
 	std::ofstream out("out.txt");
 	for (auto& i : result) {
 		if (result[0] != i) {

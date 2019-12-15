@@ -44,7 +44,7 @@ std::vector<int16_t> solver_beamsearch()
 		}
 		std::mutex mtx;
 		auto estimater = nstate.EstimaterInit(remv);
-		std::for_each(std::execution::par, remv.begin(), remv.end(), [&nstate, &queue, &mtx, &finished, &estimater](const int32_t& next) {
+		std::for_each(std::execution::par, remv.begin(), remv.end(), [&nstate, &queue, &mtx, &finished, &estimater, &remv](const int32_t& next) {
 			if ((next & 1) == 0) {
 				//from
 				if (nstate.havenum >= M) {
@@ -62,9 +62,9 @@ std::vector<int16_t> solver_beamsearch()
 			nextroute = nstate.route;//copy
 			nextroute.push_back((int16_t)next);
 			int64_t nextcost = nstate.cost + distance[nstate.pos][next];
-			auto&& nextdata = estimater.get_next(nstate, next);
+			auto&& nextdata = estimater.get_next(nstate, remv, next);
 			std::lock_guard<std::mutex> lock(mtx);
-			queue.emplace_back(nextcost, next, nstate.havenum + 1, std::move(nextroute), std::move(nextdata));
+			queue.emplace_back(nextcost, next, (int8_t)(nstate.havenum + 1), std::move(nextroute), std::move(nextdata));
 			std::push_heap(queue.begin(), queue.end());
 		});
 	}
