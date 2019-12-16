@@ -4,8 +4,9 @@
 #include <queue>
 #include <execution>
 #include <mutex>
+#include <iostream>
 
-using CostEstimater = Christofides;
+using CostEstimater = MinimumSpanningTree;
 using State = StateT<CostEstimater::Data>;
 
 
@@ -21,11 +22,19 @@ std::vector<int16_t> solver_beamsearch()
 	queue.reserve(BEAM_WIDTH);
 
 	queue.emplace_back(0, 2*N, (int8_t)0, std::vector<int16_t>{});
-	std::push_heap(queue.begin(), queue.end());
+	std::push_heap(queue.begin(), queue.end(), std::greater<>{});
 	
 	while (!queue.empty()) {
-		std::pop_heap(queue.begin(), queue.end());
+		std::pop_heap(queue.begin(), queue.end(), std::greater<>{});
 		auto nstate = std::move(queue.back()); queue.pop_back();
+
+#ifdef _DEBUG
+		std::cout << "DEBUG: [";
+		for (auto& r : nstate.route) {
+			std::cout << r << ", ";
+		}
+		std::cout << "]" << std::endl;
+#endif
 
 		if (nstate.route.size() == 2*N) {
 			return nstate.route;
@@ -45,27 +54,30 @@ std::vector<int16_t> solver_beamsearch()
 		std::mutex mtx;
 		auto estimater = nstate.EstimaterInit(remv);
 		std::for_each(std::execution::par, remv.begin(), remv.end(), [&nstate, &queue, &mtx, &finished, &estimater, &remv](const int32_t& next) {
+			int8_t next_have = nstate.havenum;
 			if ((next & 1) == 0) {
 				//from
 				if (nstate.havenum >= M) {
 					return;
 				}
+				++next_have;
 			}
 			else {
 				//to
 				if (!finished[next - 1]) {
 					return;
 				}
+				--next_have;
 			}
 			std::vector<int16_t> nextroute;
 			nextroute.reserve(nstate.route.size() + 1);
 			nextroute = nstate.route;//copy
 			nextroute.push_back((int16_t)next);
 			int64_t nextcost = nstate.cost + distance[nstate.pos][next];
-			auto&& nextdata = estimater.get_next(nstate, remv, next);
+			auto&& nextdata = estimater.get_next(nstate, remv, finished, next);
 			std::lock_guard<std::mutex> lock(mtx);
-			queue.emplace_back(nextcost, next, (int8_t)(nstate.havenum + 1), std::move(nextroute), std::move(nextdata));
-			std::push_heap(queue.begin(), queue.end());
+			queue.emplace_back(nextcost, next, next_have, std::move(nextroute), std::move(nextdata));
+			std::push_heap(queue.begin(), queue.end(), std::greater<>{});
 		});
 	}
 

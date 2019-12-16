@@ -4,7 +4,7 @@
 #include <execution>
 #include <cassert>
 
-Christofides::Data::Data(const State& state)
+MinimumSpanningTree::Data::Data(const State& state)
 {
 	std::vector<int32_t> remv(2 * N);
 	std::iota(remv.begin(), remv.end(), (int32_t)0);
@@ -17,14 +17,14 @@ Christofides::Data::Data(const State& state)
 	total_cost += state.cost;
 }
 
-Christofides::Data::Data(Data&& estimater_data, const State&)
+MinimumSpanningTree::Data::Data(Data&& estimater_data, const State&)
 {
 	*this = std::move(estimater_data);
 }
 
 
 
-void Christofides::build_v_to_stnum(int nowv, int& now_index, int parent)
+void MinimumSpanningTree::build_v_to_stnum(int nowv, int& now_index, int parent)
 {
 	const size_t size_ = data.basetree[nowv].size();
 	for (size_t i = 0; i < size_; ++i) {
@@ -38,7 +38,7 @@ void Christofides::build_v_to_stnum(int nowv, int& now_index, int parent)
 	now_index += (int)size_;
 }
 //@return Ž©g‚Ìsubtree”Ô†
-size_t Christofides::build_v_to_st(int nowv, int parent, int from)
+size_t MinimumSpanningTree::build_v_to_st(int nowv, int parent, int from)
 {
 	int64_t distmin = distance[from][nowv];
 	int_fast16_t minpair = nowv;
@@ -64,7 +64,7 @@ size_t Christofides::build_v_to_st(int nowv, int parent, int from)
 	assert(this_index_add != size_ || parent == -1);
 	return this_index;
 }
-size_t Christofides::build_st_to_st(int nowv, int parent, int to_st)
+size_t MinimumSpanningTree::build_st_to_st(int nowv, int parent, int to_st)
 {
 	int64_t distmin = v_to_st_dist[nowv][to_st];
 	std::pair<int16_t, int16_t> minpair = { (int16_t)nowv, v_to_st_pair[nowv][to_st] };
@@ -91,7 +91,7 @@ size_t Christofides::build_st_to_st(int nowv, int parent, int to_st)
 	return this_index;
 }
 
-Christofides::Christofides(Data& data, const State&, const std::vector<int32_t>& remv)
+MinimumSpanningTree::MinimumSpanningTree(Data& data, const State&, const std::vector<int32_t>& remv)
 	: data(data)
 	, subtree_dist_data(2 * (remv.size() - 1) * 2 * (remv.size() - 1), INF)
 	, st_to_st_dist(subtree_dist_data.data(), 2 * (remv.size() - 1), 2 * (remv.size() - 1))
@@ -133,9 +133,14 @@ Christofides::Christofides(Data& data, const State&, const std::vector<int32_t>&
 	v_to_st_pair_data.clear();
 }
 
-auto Christofides::get_next(const State& prevstate, const std::vector<int32_t>& remv, int32_t nextv) const->Data
+auto MinimumSpanningTree::get_next(const State& prevstate, const std::vector<int32_t>& remv, bool (&finished)[2 * N_MAX], int32_t nextv) const->Data
 {
 	Data res;
+	if (remv.size() < 15) {
+		res.total_cost = get_next_bruteforce(prevstate, remv, finished, nextv);
+		return std::move(res);
+	}
+
 	res.treecost = prevstate.estimater.treecost;
 	res.basetree = prevstate.estimater.basetree;//copy
 	std::vector<int32_t> st_index;

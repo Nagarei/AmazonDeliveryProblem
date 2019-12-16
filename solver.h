@@ -5,6 +5,7 @@
 
 // main global
 constexpr int32_t N_MAX = 1000;
+constexpr int32_t M_MAX = 5;
 constexpr int64_t DISTANCE_MAX = 10000000;
 constexpr int64_t INF = 10100010000000;
 extern int32_t N;

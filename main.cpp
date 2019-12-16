@@ -54,11 +54,11 @@ int main()
 	std::cout << "COMPLETE" << std::endl;
 	std::cout << result.size() << std::endl;
 	std::ofstream out("out.txt");
-	for (auto& i : result) {
-		if (result[0] != i) {
+	for (auto& v : result) {
+		if (result[0] != v) {
 			out << ' ';
 		}
-		out << result[i];
+		out << v;
 	}
 
 	return 0;

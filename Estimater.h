@@ -5,21 +5,21 @@
 
 using TreeIndexType = int16_t;
 
-class Christofides final
+class MinimumSpanningTree final
 {
 public:
 	struct Data final {
 	private:
-		friend Christofides;
+		friend MinimumSpanningTree;
 		using State = StateT<Data>;
 		std::vector<std::vector<TreeIndexType>> basetree;
 		int64_t treecost;
 		int64_t total_cost;
-		Data()noexcept {}
+		Data()noexcept:treecost(), total_cost() {}
 	public:
 		Data(const StateT<Data>& state);//root初期化
 		Data(Data&& estimater_data, const StateT<Data>& state);
-		Christofides Init(const State& state, const std::vector<int32_t>& remv) { return { *this, state, remv }; }
+		MinimumSpanningTree Init(const State& state, const std::vector<int32_t>& remv) { return { *this, state, remv }; }
 
 		bool operator<(const Data& r)const {
 			return (total_cost) < (r.total_cost);
@@ -47,10 +47,19 @@ private:
 	size_t build_v_to_st(int nowv, int parent, int from);
 	size_t build_st_to_st(int nowv, int parent, int to_st);
 public:
-	Christofides(Data& data, const State& state, const std::vector<int32_t>& remv);
+	MinimumSpanningTree(Data& data, const State& state, const std::vector<int32_t>& remv);
 
 	//スレッドセーフであること！
-	Data get_next(const State& prevstate, const std::vector<int32_t>& remv, int32_t nextv)const;
+	Data get_next(const State& prevstate, const std::vector<int32_t>& remv, bool(&finished)[2 * N_MAX], int32_t nextv)const;
 };
 
 std::vector<std::vector<TreeIndexType>> Prim(std::vector<int32_t> remv, int32_t remvmax, ArrayView<const int64_t, 2> distance_, int64_t& out_distsum);
+
+//スレッドセーフであること！
+int64_t get_next_bruteforce_impl(int8_t have, int32_t pos, const std::vector<int32_t>& remv, const bool(&finished)[2 * N_MAX], int32_t nextv);
+template<typename T>
+int64_t get_next_bruteforce(const StateT<T>& prevstate, const std::vector<int32_t>& remv, const bool(&finished)[2 * N_MAX], int32_t nextv)
+{
+	return prevstate.cost + distance[prevstate.pos][nextv] + get_next_bruteforce_impl(prevstate.havenum, prevstate.pos, remv, finished, nextv);
+
+}

@@ -16,5 +16,16 @@ void init_distance()
 		distance[i][j] = distance[j][i] =
 			static_cast<int64_t>(sqrt((p1x - p2x) * (p1x - p2x) + (p1y - p2y) * (p1y - p2y)) + 0.5);
 	}
+	for (int32_t j = 0; j < 2 * N; ++j)
+	{
+		const auto& p1 = start;
+		const auto& p2 = tasks[j / 2][j % 2];
+		const auto& p1x = p1[0];
+		const auto& p1y = p1[1];
+		const auto& p2x = p2[0];
+		const auto& p2y = p2[1];
+		distance[2*N][j] = distance[j][2 * N] =
+			static_cast<int64_t>(sqrt((p1x - p2x) * (p1x - p2x) + (p1y - p2y) * (p1y - p2y)) + 0.5);
+	}
 }
 
