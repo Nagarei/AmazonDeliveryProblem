@@ -143,6 +143,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Astar.cpp" />
+    <ClCompile Include="beamsearch.cpp" />
+    <ClCompile Include="greedy.cpp" />
     <ClCompile Include="MinimumSpanningTree.cpp" />
     <ClCompile Include="estimate_utility.cpp" />
     <ClCompile Include="main.cpp" />

@@ -99,7 +99,7 @@ struct range_iterator {
 	using reference = value_type&;
 	using iterator_category = std::random_access_iterator_tag;
 	Integer value;
-	constexpr range_iterator()noexcept {}
+	constexpr range_iterator()noexcept :value(){}
 	constexpr range_iterator(Integer value)noexcept:value(value) {}
 	Integer operator*() { return value; }
 	range_iterator  operator++(int) noexcept { auto tmp = *this; ++value; return tmp; }

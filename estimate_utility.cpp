@@ -6,10 +6,8 @@
 #include <array>
 #include "utility.h"
 
-std::vector<std::vector<TreeIndexType>> Prim(std::vector<int32_t> remv, int32_t remvmax, ArrayView<const int64_t, 2> distance_, int64_t& out_distsum)
+void Prim_impl(std::vector<int32_t> remv, ArrayView<const int64_t, 2> distance_, int64_t& out_distsum, std::vector<std::vector<TreeIndexType>>& result, std::vector<std::pair<int64_t, int32_t>>& dist_from_tree)
 {
-	std::vector<std::vector<TreeIndexType>> result(remvmax);
-	std::vector<std::pair<int64_t, int32_t>> dist_from_tree(remvmax, { INF,-1 });
 	dist_from_tree[remv.back()].first = 0;
 	dist_from_tree[remv.back()].second = remv.back();
 	out_distsum = 0;
@@ -49,11 +47,31 @@ std::vector<std::vector<TreeIndexType>> Prim(std::vector<int32_t> remv, int32_t 
 		});
 	}
 
+	return;
+}
+std::vector<std::vector<TreeIndexType>> Prim(std::vector<int32_t> remv, int32_t remvmax, ArrayView<const int64_t, 2> distance_, int64_t& out_distsum)
+{
+	std::vector<std::vector<TreeIndexType>> result(remvmax);
+	std::vector<std::pair<int64_t, int32_t>> dist_from_tree(remvmax, { INF,-1 });
+	Prim_impl(std::move(remv), distance_, out_distsum, result, dist_from_tree);
 	return std::move(result);
 }
-
-int64_t get_next_bruteforce_dp(int8_t have, size_t posi, uint32_t mask, const std::vector<int32_t>& remv, const bool(&finished)[2 * N_MAX], std::vector<std::array<std::array<int64_t, 20>, M_MAX>>& dp)
+std::vector<std::vector<TreeIndexType>>* Prim_threadunsafe(std::vector<int32_t> remv, int64_t& out_distsum)
 {
+	static std::vector<std::vector<TreeIndexType>> result(2 * N);
+	static std::vector<std::pair<int64_t, int32_t>> dist_from_tree(2 * N, { INF,-1 });
+	std::for_each(std::execution::par_unseq, result.begin(), result.end(), [&](std::vector<TreeIndexType>& v) {
+		v.clear();
+	});
+	std::fill(std::execution::par_unseq, dist_from_tree.begin(), dist_from_tree.end(), std::pair<int64_t, int32_t>{ INF,-1 });
+	Prim_impl(std::move(remv), { (int64_t*)distance, sizeof(distance) / sizeof(*distance), sizeof(*distance) / sizeof(**distance) }, out_distsum, result, dist_from_tree);
+	return &result;
+}
+
+int64_t Bruteforce::get_next_bruteforce_dp(int8_t have, size_t posi, uint32_t mask, const bool(&finished)[2 * N_MAX])
+{
+	const auto& remv = *prevdata.remv_ptr;
+	auto& dp = *prevdata.dp_ptr;
 	auto pos = remv[posi];
 	if (mask == ((1ui32<< remv.size())-1)) {
 		return distance[2 * N][pos];
@@ -62,10 +80,12 @@ int64_t get_next_bruteforce_dp(int8_t have, size_t posi, uint32_t mask, const st
 	if (memo != -1) {
 		return memo;
 	}
-	memo = INF;
+
+	int64_t res = INF;
 	for (size_t i = 0; i < remv.size(); i++)
 	{
 		if (mask & (1<<i)) { continue; }
+		if (finished[remv[i]]) { continue;  }
 
 		int8_t next_have = have;
 		if ((remv[i] & 1) == 0) {
@@ -92,35 +112,83 @@ int64_t get_next_bruteforce_dp(int8_t have, size_t posi, uint32_t mask, const st
 					continue;
 				}
 			}
+			if (next_have <= 0) {
+				continue;
+			}
 			--next_have;
 		}
-		memo = std::min(memo, distance[pos][remv[i]] + get_next_bruteforce_dp(next_have, i, mask | (1 << i), remv, finished, dp));
+		res = std::min(res, distance[pos][remv[i]] + get_next_bruteforce_dp(next_have, i, mask | (1 << i), finished));
 	}
-	return memo;
+	return memo = res;
 }
-int64_t get_next_bruteforce_impl(int8_t have, int32_t , const std::vector<int32_t>& remv, const bool(&finished)[2 * N_MAX], int32_t nextv)
+
+Bruteforce Bruteforce::Init(Data&& prevdata_, int8_t have, const std::vector<int32_t>& remv, const bool(&finished)[2 * N_MAX])
 {
+	Bruteforce res;
+	res.prevdata = std::move(prevdata_);
+	if (res.prevdata.dp_ptr) { return std::move(res); }
+
 	assert(remv.size() <= 20);
-	std::array<std::array<int64_t, 20>, M_MAX> init_value;
-	for (size_t j = 0; j < M_MAX; j++) {
+	std::array<std::array<int64_t, 20>, M_MAX+1> init_value;
+	for (size_t j = 0; j <= M_MAX; j++) {
 		for (size_t k = 0; k < 20; k++) {
 			init_value[j][k] = -1;
 		}
 	}
-	std::vector<std::array<std::array<int64_t,20>, M_MAX>> dp(size_t(1) << remv.size(), init_value);
+	res.prevdata.dp_ptr = std::make_shared<decltype(res.prevdata.dp_ptr)::element_type>(size_t(1) << remv.size(), init_value);
+	res.prevdata.remv_ptr = std::make_shared<decltype(res.prevdata.remv_ptr)::element_type>(remv);
+	for (size_t i = 0; i < (size_t(1) << remv.size()); i++) {
+		for (int8_t j = 0; j <= M; j++) {
+			for (int32_t k = 0; k < remv.size(); k++) {
+				res.get_next_bruteforce_dp(j, k, (uint32_t)i, finished);
+			}
+		}
+	}
+
 	for (size_t i = 0; i < remv.size(); i++)
 	{
-		if (remv[i] == nextv) {
-			int8_t next_have = have;
+		int8_t next_have = have;
+		if ((remv[i] & 1) == 0) {
+			//from
+			if (next_have >= M) {
+				continue;
+			}
+			++next_have;
+		}
+		else {
+			//to
+			if (!finished[remv[i] - 1]) {
+				continue;
+			}
+			--next_have;
+		}
+		res.get_next_bruteforce_dp(next_have, i, (uint32_t)(1)<<i, finished);
+	}
+	return std::move(res);
+}
+int64_t Bruteforce::get_next_bruteforce_impl(int8_t prevstate_have, const bool(&prevstate_finished)[2 * N_MAX], int32_t nextv)const
+{
+	auto& remv = *(prevdata.remv_ptr);
+	uint32_t mask = 0;
+	int8_t next_have = prevstate_have;
+	size_t posi = 0;
+	for (size_t i = 0; i < remv.size(); i++)
+	{
+		if (prevstate_finished[remv[i]]) {
+			mask |= (1 << i);
+		}
+		else if (remv[i] == nextv) {
 			if ((nextv & 1) == 0) {
 				++next_have;
 			}
 			else {
 				--next_have;
 			}
-			return get_next_bruteforce_dp(next_have, i, (1 << i), remv, finished, dp);
+			posi = i;
+			mask |= (1 << i);
+			//return get_next_bruteforce_dp(next_have, i, (1 << i), prevstate_finished);
 		}
 	}
-	assert(false);
-	return 0;
+	auto& dp = *(prevdata.dp_ptr);
+	return dp[mask][next_have][posi];
 }

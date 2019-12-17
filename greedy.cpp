@@ -7,13 +7,13 @@
 #include <iostream>
 #include <set>
 
-using CostEstimater = MinimumSpanningTree;
+using CostEstimater = NoEstimate;
 using State = StateT<CostEstimater::Data>;
 
 
-static constexpr int32_t BEAM_WIDTH = 50;
+static constexpr int32_t BEAM_WIDTH = 1;
 
-std::vector<int16_t> solver_limitedAstar()
+std::vector<int16_t> solver_greedy()
 {
 	init_distance();
 
@@ -44,7 +44,7 @@ std::vector<int16_t> solver_limitedAstar()
 		}
 #endif
 
-		if (nstate.route.size() == 2*N) {
+		if (nstate.route.size() == 2 * N) {
 			std::cout << "SCORE: " << nstate.cost + distance[2 * N][nstate.route.back()] << std::endl;
 			return nstate.route;
 		}
@@ -91,7 +91,7 @@ std::vector<int16_t> solver_limitedAstar()
 			if (BEAM_WIDTH < queue.size()) {
 				queue.erase(--queue.end());
 			}
-		});
+			});
 	}
 
 	return {};

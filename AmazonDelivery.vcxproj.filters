@@ -36,6 +36,12 @@
     <ClCompile Include="MinimumSpanningTree.cpp">
       <Filter>ソース ファイル\Estimater</Filter>
     </ClCompile>
+    <ClCompile Include="beamsearch.cpp">
+      <Filter>ソース ファイル\solver</Filter>
+    </ClCompile>
+    <ClCompile Include="greedy.cpp">
+      <Filter>ソース ファイル\solver</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="solver.h">

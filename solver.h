@@ -41,10 +41,6 @@ struct StateT {
 		, route(std::move(route_))
 		, estimater(*this)
 	{}
-
-	decltype(auto) EstimaterInit(const std::vector<int32_t>& remv) {
-		return estimater.Init(*this, remv);
-	}
 };
 template<typename Estimater>
 inline bool operator<(const StateT<Estimater>& a, const StateT<Estimater>& b) {
@@ -57,3 +53,5 @@ inline bool operator>(const StateT<Estimater>& a, const StateT<Estimater>& b) {
 
 
 std::vector<int16_t> solver_beamsearch();
+std::vector<int16_t> solver_limitedAstar();
+std::vector<int16_t> solver_greedy();
