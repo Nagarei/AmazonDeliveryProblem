@@ -7,7 +7,7 @@
 #include <iostream>
 #include <set>
 
-using CostEstimater = NoEstimate;
+using CostEstimater = MinimumSpanningTree;
 using State = StateT<CostEstimater::Data>;
 
 

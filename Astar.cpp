@@ -11,7 +11,7 @@ using CostEstimater = MinimumSpanningTree;
 using State = StateT<CostEstimater::Data>;
 
 
-static constexpr int32_t BEAM_WIDTH = 50;
+static constexpr int32_t BEAM_WIDTH = 100;
 
 std::vector<int16_t> solver_limitedAstar()
 {

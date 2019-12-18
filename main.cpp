@@ -12,6 +12,7 @@
 //ある荷物の配達地点において、そこに居るときに、その荷物を持っているならば、その荷物を配達することが出来ます。配達するとその荷物を持っていない状態になります。
 //
 //制約
+//数値は整数
 //1 <= N <= 10 ^ 3
 //1 <= M <= 5
 //座標の絶対値は10 ^ 9以下
@@ -56,8 +57,6 @@ int main()
 	auto result = solver_beamsearch();
 	auto finish = std::chrono::system_clock::now();
 
-	std::cout << "COMPLETE" << std::endl;
-	std::cout << result.size() << std::endl;
 	std::ofstream out(OUTPUT_FILE);
 	for (auto& v : result) {
 		if (result[0] != v) {

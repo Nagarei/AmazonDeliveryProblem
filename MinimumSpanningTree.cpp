@@ -5,7 +5,7 @@
 #include <cassert>
 
 
-static constexpr int FULL_SEARCH_MAX = 18;
+static constexpr int FULL_SEARCH_MAX = 14;
 #ifdef NOT_COPY_BASETREE
 #define MST_basetree (*(this->basetree))
 #else
@@ -40,6 +40,8 @@ MinimumSpanningTree::MinimumSpanningTree()
 #ifndef NOT_COPY_BASETREE
 	, st_to_st_pair_data(subtree_dist_data.size())
 	, st_to_st_pair(st_to_st_pair_data.data(), 2 * (2 * N - 1), 2 * (2 * N - 1))
+#else
+	, basetree()
 #endif
 	, v_to_stnum(2 * N)
 	, v_to_st_dist_data(2 * N * 2 * (2 * N - 1), INF)
