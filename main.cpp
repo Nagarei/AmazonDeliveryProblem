@@ -27,6 +27,7 @@
 #include <fstream>
 #include <cstdint>
 #include <chrono>
+#include <random>
 #include "solver.h"
 
 int32_t N;
@@ -37,8 +38,27 @@ int64_t tasks[N_MAX][2][2];
 constexpr const char* const INPUT_FILE = "5input.txt";
 constexpr const char* const OUTPUT_FILE = "5output.txt";
 
+void make_random_input(int n, int m, const char* filename)
+{
+	std::ofstream file(filename);
+	std::mt19937_64 engine(5498);
+	std::uniform_int_distribution<int32_t> dist(-DISTANCE_MAX, DISTANCE_MAX);
+	file << dist(engine) << ' ' << dist(engine) << '\n';
+	file << n << std::endl;
+	for (int32_t i = 0; i < n; i++)
+	{
+		file << dist(engine) << ' ' << dist(engine) << ' '
+			 << dist(engine) << ' ' << dist(engine) << '\n';
+	}
+	file << m << std::endl;
+	return;
+}
+
 int main()
 {
+	//make_random_input(400, 5, "6input.txt");
+	//return 0;
+
 	std::ifstream in(INPUT_FILE);
 	if (!in) {
 		std::cerr << "NO INPUT" << std::endl;
