@@ -64,9 +64,9 @@ std::vector<int16_t> solver_beamsearch()
 				remv.push_back(i);
 			}
 		}
-		std::mutex mtx;
+		//std::mutex mtx;//lock‚à‚·‚é‚±‚Æ
 		auto&& estimater = CostEstimater::Init(std::move(nstate.estimater), nstate, remv, finished);
-		std::for_each(std::execution::seq, remv.begin(), remv.end(), [&nstate, &quenext, &mtx, &finished, &estimater, &remv](const int32_t& next) {
+		std::for_each(std::execution::seq, remv.begin(), remv.end(), [&](const int32_t& next) {
 			int8_t next_have = nstate.havenum;
 			if ((next & 1) == 0) {
 				//from
@@ -88,7 +88,7 @@ std::vector<int16_t> solver_beamsearch()
 			nextroute.push_back((int16_t)next);
 			int64_t nextcost = nstate.cost + distance[nstate.pos][next];
 			auto&& nextdata = estimater.get_next(nstate, remv, finished, next);
-			std::lock_guard<std::mutex> lock(mtx);
+			//std::lock_guard<std::mutex> lock(mtx);
 			quenext.emplace(nextcost, next, next_have, std::move(nextroute), std::move(nextdata));
 			//queue.emplace_back(nextcost, next, next_have, std::move(nextroute), std::move(nextdata));
 			//std::push_heap(queue.begin(), queue.end(), std::greater<>{});

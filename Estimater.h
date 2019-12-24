@@ -74,7 +74,8 @@ public:
 		friend MinimumSpanningTree;
 		using State = StateT<Data>;
 #ifndef NOT_COPY_BASETREE
-		std::vector<std::vector<TreeIndexType>> basetree;
+		std::vector<int32_t> v_to_stnum;
+		std::vector<TreeIndexType> basetree;
 #endif
 		int64_t treecost;
 		int64_t total_cost;
@@ -101,9 +102,9 @@ private:
 	std::vector<std::pair<int16_t, int16_t>> st_to_st_pair_data;//二次元のならし
 	ArrayView<std::pair<int16_t, int16_t>, 2> st_to_st_pair;//st_to_st_distが何と何のペアかを保存
 #endif
-	std::vector<int32_t> v_to_stnum;//subtree[root_v][parent_v]のindexはv_to_stnum[root_v] + (find(basetree[root_v], parent_v) - basetree.begin())
 #ifdef NOT_COPY_BASETREE
-	std::vector<std::vector<TreeIndexType>>* basetree;
+	static std::vector<int32_t> v_to_stnum;//subtree[root_v][parent_v]のindexはv_to_stnum[root_v] + (find(basetree[root_v], parent_v) - basetree.begin())
+	static std::vector<TreeIndexType> basetree;
 #endif
 
 	//temporary in constructor
@@ -114,7 +115,6 @@ private:
 	ArrayView<int16_t, 2> v_to_st_pair;//v_to_st_distが何とのペアかを保存
 #endif
 
-	void build_v_to_stnum(int nowv, int& now_index, int parent);
 	size_t build_v_to_st(int nowv, int parent, int from);
 	size_t build_st_to_st(int nowv, int parent, int to_st, int depth = 0);
 
@@ -132,5 +132,74 @@ public:
 	Data get_next(const State& prevstate, const std::vector<int32_t>& remv, bool(&finished)[2 * N_MAX], int32_t nextv)const;
 };
 
+class Pair_MST final
+{
+public:
+	struct Data final {
+	private:
+		friend Pair_MST;
+		using State = StateT<Data>;
+#ifndef NOT_COPY_BASETREE
+		std::vector<int32_t> v_to_stnum;
+		std::vector<TreeIndexType> basetree;
+#endif
+		int64_t treecost;
+		int64_t total_cost;
+		Bruteforce::Data bruteforce;
+		Data()noexcept :treecost(), total_cost() {}
+	public:
+		Data(const StateT<Data>& state);//root初期化
+		Data(Data&& estimater_data, const StateT<Data>& state);
+
+		bool operator<(const Data& r)const {
+			return (total_cost) < (r.total_cost);
+		}
+		bool operator>(const Data& r)const {
+			return (total_cost) > (r.total_cost);
+		}
+	};
+	using State = Data::State;
+private:
+	Bruteforce bruteforce;
+	Data data;
+	std::vector<int64_t> subtree_dist_data;//二次元のならし
+	ArrayView<int64_t, 2> st_to_st_dist;//subtree同士の最短距離
+#ifndef NOT_COPY_BASETREE
+	std::vector<std::pair<int16_t, int16_t>> st_to_st_pair_data;//二次元のならし
+	ArrayView<std::pair<int16_t, int16_t>, 2> st_to_st_pair;//st_to_st_distが何と何のペアかを保存
+#endif
+#ifdef NOT_COPY_BASETREE
+	static std::vector<int32_t> v_to_stnum;//subtree[root_v][parent_v]のindexはv_to_stnum[root_v] + (find(basetree[root_v], parent_v) - basetree.begin())
+	static std::vector<TreeIndexType> basetree;
+#endif
+
+	//temporary in constructor
+	std::vector<int64_t> v_to_st_dist_data;//二次元のならし
+	ArrayView<int64_t, 2> v_to_st_dist;//頂点とsubtreeの最短距離
+#ifndef NOT_COPY_BASETREE
+	std::vector<int16_t> v_to_st_pair_data;//二次元のならし
+	ArrayView<int16_t, 2> v_to_st_pair;//v_to_st_distが何とのペアかを保存
+#endif
+
+	size_t build_v_to_st(int nowv, int parent, int from);
+	size_t build_st_to_st(int nowv, int parent, int to_st, int depth = 0);
+
+private:
+	Pair_MST();
+	void Init_impl(Data&& data, const State& state, const std::vector<int32_t>& remv, const bool(&finished)[2 * N_MAX]);
+public:
+	static Pair_MST& Init(Data&& data, const State& state, const std::vector<int32_t>& remv, const bool(&finished)[2 * N_MAX]) {
+		static Pair_MST ins;
+		ins.Init_impl(std::move(data), state, remv, finished);
+		return ins;
+	}
+
+	//スレッドセーフであること！
+	Data get_next(const State& prevstate, const std::vector<int32_t>& remv, bool(&finished)[2 * N_MAX], int32_t nextv)const;
+};
+
 std::vector<std::vector<TreeIndexType>> Prim(std::vector<int32_t> remv, int32_t remvmax, ArrayView<const int64_t, 2> distance_, int64_t& out_distsum);
-std::vector<std::vector<TreeIndexType>>* Prim_threadunsafe(std::vector<int32_t> remv, int64_t& out_distsum);
+void Prim_threadunsafe(std::vector<int32_t> remv, int64_t& out_distsum, std::vector<std::vector<TreeIndexType>>& result);
+void Prim_threadunsafe2(std::vector<int32_t> remv, int64_t& out_distsum, std::vector<TreeIndexType>& result, std::vector<int32_t>& v_to_stnum);
+void Prim_pair(std::vector<int32_t> remv, int32_t remvmax, ArrayView<const int64_t, 2> distance_, int64_t& out_distsum);
+void Prim_threadunsafe2_pair(std::vector<int32_t> remv, int64_t& out_distsum, std::vector<TreeIndexType>& result, std::vector<int32_t>& v_to_stnum);

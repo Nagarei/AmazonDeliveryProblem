@@ -152,6 +152,7 @@
   <ItemGroup>
     <ClInclude Include="Estimater.h" />
     <ClInclude Include="solver.h" />
+    <ClCompile Include="Pair_MST.cpp" />
     <ClCompile Include="solver_utility.cpp" />
     <ClInclude Include="utility.h" />
   </ItemGroup>

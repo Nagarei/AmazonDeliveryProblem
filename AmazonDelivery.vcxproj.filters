@@ -42,6 +42,9 @@
     <ClCompile Include="greedy.cpp">
       <Filter>ソース ファイル\solver</Filter>
     </ClCompile>
+    <ClCompile Include="Pair_MST.cpp">
+      <Filter>ソース ファイル\Estimater</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="solver.h">

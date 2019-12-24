@@ -35,8 +35,8 @@ int32_t M;
 int64_t start[2];
 int64_t tasks[N_MAX][2][2];
 
-constexpr const char* const INPUT_FILE = "5input.txt";
-constexpr const char* const OUTPUT_FILE = "5output.txt";
+constexpr const char* const INPUT_FILE = "6input.txt";
+constexpr const char* const OUTPUT_FILE = "6output.txt";
 
 void make_random_input(int n, int m, const char* filename)
 {
@@ -74,7 +74,7 @@ int main()
 	in >> M;
 	in.close();
 	auto starttime = std::chrono::system_clock::now();
-	auto result = solver_beamsearch();
+	auto result = solver_greedy();
 	auto finish = std::chrono::system_clock::now();
 
 	std::ofstream out(OUTPUT_FILE);

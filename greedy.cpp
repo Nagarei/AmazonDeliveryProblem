@@ -7,7 +7,7 @@
 #include <iostream>
 #include <set>
 
-using CostEstimater = MinimumSpanningTree;
+using CostEstimater = Pair_MST;
 using State = StateT<CostEstimater::Data>;
 
 
@@ -62,7 +62,7 @@ std::vector<int16_t> solver_greedy()
 		}
 		std::mutex mtx;
 		auto&& estimater = CostEstimater::Init(std::move(nstate.estimater), nstate, remv, finished);
-		std::for_each(std::execution::seq, remv.begin(), remv.end(), [&nstate, &queue, &mtx, &finished, &estimater, &remv](const int32_t& next) {
+		std::for_each(std::execution::par, remv.begin(), remv.end(), [&nstate, &queue, &mtx, &finished, &estimater, &remv](const int32_t& next) {
 			int8_t next_have = nstate.havenum;
 			if ((next & 1) == 0) {
 				//from
