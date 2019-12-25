@@ -7,7 +7,7 @@
 #include <iostream>
 #include <set>
 
-using CostEstimater = Pair_MST;
+using CostEstimater = MinimumSpanningTree;
 using State = StateT<CostEstimater::Data>;
 
 

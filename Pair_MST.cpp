@@ -22,15 +22,9 @@ Pair_MST::Data::Data(const State& state)
 	auto s_to_tree_index = *std::min_element(std::execution::par_unseq, remv.begin(), remv.end(), [](int32_t a, int32_t b) {
 		return distance[2 * N][a] < distance[2 * N][b];
 		});
-#ifndef NOT_COPY_BASETREE
-	basetree =
-#endif
-		Prim_pair(std::move(remv), 2 * N, { (int64_t*)distance, sizeof(distance) / sizeof(*distance), sizeof(*distance) / sizeof(**distance) }, treecost);
-#ifndef NOT_COPY_BASETREE
-	v_to_stnum‚ð\’z
-#endif
+	Prim_pair(std::move(remv), 2 * N, { (int64_t*)distance, sizeof(distance) / sizeof(*distance), sizeof(*distance) / sizeof(**distance) }, treecost);
 
-		total_cost = 2 * distance[2 * N][s_to_tree_index] + treecost;
+	total_cost = 2 * distance[2 * N][s_to_tree_index] + treecost;
 	total_cost += state.cost;
 }
 
@@ -195,22 +189,20 @@ auto Pair_MST::get_next(const State& prevstate, const std::vector<int32_t>& remv
 			remvnext.push_back(i);
 		}
 	}
-	Prim_pair(std::move(remvnext), 2*N, { (int64_t*)distance, sizeof(distance) / sizeof(*distance), sizeof(*distance) / sizeof(**distance) }, res.treecost);
-
 	//’[“_“ñ‚Â
 	int64_t s_to_tree = INF;
 	int64_t v_to_tree = INF;
-	for (auto& v : remv) {
-		if (v != nextv) {
-			s_to_tree = std::min(s_to_tree, distance[2 * N][v]);
-			v_to_tree = std::min(v_to_tree, distance[nextv][v]);
-		}
+	for (auto& v : remvnext) {
+		s_to_tree = std::min(s_to_tree, distance[2 * N][v]);
+		v_to_tree = std::min(v_to_tree, distance[nextv][v]);
 	}
+	Prim_pair(std::move(remvnext), 2*N, { (int64_t*)distance, sizeof(distance) / sizeof(*distance), sizeof(*distance) / sizeof(**distance) }, res.treecost);
+
 
 	res.total_cost = v_to_tree + s_to_tree + res.treecost;
-	res.total_cost = std::max(prevstate.estimater.total_cost - prevstate.cost, res.total_cost);
-
-	res.total_cost += prevstate.cost + distance[nextv][prevstate.pos];
+	auto route_cost = prevstate.cost + distance[nextv][prevstate.pos];
+	res.total_cost = std::max(prevstate.estimater.total_cost - route_cost, res.total_cost);
+	res.total_cost += route_cost;
 	return std::move(res);
 }
 

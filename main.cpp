@@ -74,7 +74,7 @@ int main()
 	in >> M;
 	in.close();
 	auto starttime = std::chrono::system_clock::now();
-	auto result = solver_greedy();
+	auto result = solver_beamsearch();
 	auto finish = std::chrono::system_clock::now();
 
 	std::ofstream out(OUTPUT_FILE);

@@ -251,9 +251,9 @@ auto MinimumSpanningTree::get_next(const State& prevstate, const std::vector<int
 	}
 
 	res.total_cost = v_to_tree + s_to_tree + res.treecost;
-	res.total_cost = std::max(prevstate.estimater.total_cost - prevstate.cost, res.total_cost);
-
-	res.total_cost += prevstate.cost + distance[nextv][prevstate.pos];
+	auto route_cost = prevstate.cost + distance[nextv][prevstate.pos];
+	res.total_cost = std::max(prevstate.estimater.total_cost - route_cost, res.total_cost);
+	res.total_cost += route_cost;
 	return std::move(res);
 }
 
